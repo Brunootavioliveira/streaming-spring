@@ -9,10 +9,7 @@ import br.com.brunootavio.streaming.service.ConverteDados;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Principal {
@@ -63,8 +60,10 @@ public class Principal {
         System.out.println("Top 5 episodio");
         dadosEpisodios.stream()
                 .filter(e -> !e.avaliacao().equalsIgnoreCase("N/A"))
+                .peek(e -> System.out.println("Primeiro filtro(N/A)" + e))
                 .sorted(Comparator.comparing(DadosEpisodio::avaliacao).reversed())
                 .limit(5)
+                .map(e -> e.titulo().toUpperCase())
                 .forEach(System.out::println);
 
         List<Episodio> episodios = listaTemporadas.stream()
@@ -74,6 +73,19 @@ public class Principal {
 
 
         episodios.forEach(System.out::println);
+
+        System.out.println("Digite o nome episodio: ");
+        var trechoTitulo = scanner.nextLine();
+        Optional<Episodio> episodioBuscado = episodios.stream() //Optional: conteiner que pode ou nao conter valor nao nulo
+                .filter(e -> e.getTitulo().toUpperCase().contains(trechoTitulo.toUpperCase()))
+                .findFirst();
+
+        if (episodioBuscado.isPresent()){
+            System.out.println("Episodio encontrado! ");
+            System.out.println("Temporada: " + episodioBuscado.get().getTemporada()); // conteiner que guarda a informacao, get para pegar
+        } else {
+            System.out.println("Não encontrado");
+        }
 
         System.out.println("Qual ano vocẽ deseja ver o episodio: ");
         var ano = scanner.nextInt();
@@ -89,5 +101,26 @@ public class Principal {
                                 "Episodio: " + e.getTitulo() +
                                 "Data lançamento: " + e.getDataLancamento().format(formatador)
                 ));
+
+        Map<Integer, Double> avaliacoesPorTemporadas = episodios.stream()
+                .filter(e -> e.getAvaliacao() > 0.0)
+                .collect(Collectors.groupingBy(Episodio::getTemporada,
+                        Collectors.averagingDouble(Episodio::getAvaliacao)));
+        System.out.println(avaliacoesPorTemporadas);
     }
 }
+
+//findFirst() não retorna o objeto direto, ele retorna um:
+//
+//        👉 Optional<T>
+//
+//Porque pode acontecer de:
+//
+//a lista estar vazia
+//
+//o filtro não encontrar nada
+
+//Quando usar findFirst()?
+//✔ Quando você só precisa de um resultado
+//✔ Quando a ordem importa
+//✔ Quando quer performance (para no primeiro)
